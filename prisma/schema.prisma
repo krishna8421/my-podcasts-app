@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  @@unique([provider, providerAccountId])
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+
+  favoritesIDs String[]  @db.ObjectId
+  favorites    Podcast[] @relation(fields: [favoritesIDs], references: [id])
+
+  role Role @default(USER)
+}
+
+model Podcast {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  category    String
+  type        String
+  speaker     String
+  url         String
+  thumbnail   String
+
+  // Favorites
+  userIDs String[] @db.ObjectId
+  users   User[]   @relation(fields: [userIDs], references: [id])
+}
